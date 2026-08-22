@@ -65,7 +65,7 @@
 (defun flycheck-janet--debug-error-filter (errors)
   "Debugging function for observing flycheck error objects.
 
-Takes a single argument `ERRORS' of flycheck error objects.
+Takes a single argument ERRORS of flycheck error objects.
 Use with `:error-filter' portion of `flycheck-define-checker'.
 
 At the moment, for each flycheck error object, it dumps all of the
@@ -84,7 +84,7 @@ each if these are defined."
 (defun flycheck-janet-error-filter (errors)
   "Error filter for janet checkers.
 
-Takes a single argument `ERRORS' of flycheck error objects.
+Takes a single argument ERRORS of flycheck error objects.
 Use with `:error-filter' portion of `flycheck-define-checker'.
 
 It massages file names and normalizes error positions.
