@@ -1,14 +1,36 @@
-;;; flycheck-janet.el --- janet flycheck -*- lexical-binding: t; -*-
+;;; flycheck-janet.el --- Flycheck support for Janet -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 FoAM oü
 
 ;; Author: sogaiu
+;;         nik gaffney <nik@fo.am>
+;; Maintainer: nik gaffney <nik@fo.am>
 ;; Created: 24 August 2020
 ;; Version: 2026.08.21
-;; Package-Requires: ((flycheck "0.18"))
+;; Homepage: https://codeberg.org/zzkt/flycheck-janet
+;; Package-Requires: ((emacs "26.1") (flycheck "0.18"))
+
+
+;; This file is not part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 
 ;;; Commentary:
 
 ;; This package integrates janet with Emacs via flycheck.  To use it,
-;; add to your .emacs-equivalent (e.g. init.el):
+;; add to your .emacs or equivalent (e.g. init.el):
 ;;
 ;;   (require 'flycheck-janet)
 ;;
@@ -20,25 +42,6 @@
 
 ;; Make sure the janet binary is on your path.
 
-;;; Development Notes:
-
-;; General
-
-;; * For inspiration, exploration, etc., consider examining
-;;  `flycheck.el' itself.  Something along these lines is mentioned on
-;;  the website docs...on the developer's guide page...in a note with
-;;  small text...near the end of a page with a fair bit of text.  May
-;;  be there was a Douglas Adams fan involved somehow...
-;;
-;;  In any case, the file has numerous actual examples of use of
-;;  `flycheck-define-checker' and one can get a sense of how others
-;;  have managed to get things to work.  A substantial portion of the
-;;  "latter half" of the file seems to be dedicated to calling
-;;  `flycheck-define-checker' for various programming language
-;;  arrangements.  Search for the comment "Built-in checkers".
-
-;; * Searching the issue tracker also turned up useful hints, so
-;;  remember to give that a try as well.
 
 ;; Miscellaneous
 
@@ -55,46 +58,9 @@
 ;;   all errors".  it may be that flycheck filters these out via
 ;;   `flycheck-relevant-error-p'.
 
-;;; License:
-
-;; This file is not part of GNU Emacs.
-;; However, it is distributed under the same license.
-
-;; GNU Emacs is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
-;; GNU Emacs is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
 
 ;;; Code:
 (require 'flycheck)
-
-;; sample janet -k output
-;;
-;; 1. each warning appears on one line:
-;;
-;;   sample.janet:1:1: compile warning (strict): ...
-;;
-;; 2. an error is followed by an indented stacktrace:
-;;
-;;   error: sample.janet:3:1: compile error: ...
-;;     in ...
-;;
-;; 3. when used with stdin (which happens here), can also have:
-;;
-;;   stdin:1:1: compile warning (strict): ...
-;;
-;;   error: stdin:3:1: compile error: ...
-;;     in ...
 
 (defun flycheck-janet--debug-error-filter (errors)
   "Debugging function for observing flycheck error objects.
@@ -139,6 +105,7 @@ opening parenthesis, which are converted to explicit locations."
         (when (and column (< column 1))
           (setf (flycheck-error-column err) 1)
           (setq column 1))
+
         ;; End-of-source diagnostics can land on an empty trailing
         ;; line of the buffer. Move such errors onto preceding line.
         (when (> line 1)
@@ -147,8 +114,10 @@ opening parenthesis, which are converted to explicit locations."
             (when (and (bolp) (= (point-max) (line-beginning-position)))
               (let ((empty-last-line (line-number-at-pos (point-max))))
                 (when (and (> empty-last-line 1) (>= line empty-last-line))
-                  (setq line (1- empty-last-line))
+                  ;; (setq line (1- empty-last-line))
+                  (setq line empty-last-line)
                   (setf (flycheck-error-line err) line))))))
+
         ;; Provide explicit zero-width end positions.
         (unless (flycheck-error-end-line err)
           (setf (flycheck-error-end-line err) line))
@@ -179,7 +148,6 @@ opening parenthesis, which are converted to explicit locations."
            line-end))
   "Error patterns for janet checkers.")
 
-;; https://www.flycheck.org/en/latest/developer/developing.html
 
 (flycheck-def-executable-var janet-janet "janet")
 (flycheck-define-command-checker 'janet-janet
